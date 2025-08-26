@@ -1,108 +1,158 @@
-<!doctype html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Enviar número para Google Sheets</title>
+  <meta charset="UTF-8">
+  <title>Controle de Leituras</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-    .card {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-    }
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: #333;
-      text-align: center;
-    }
-    label {
-      font-weight: bold;
-      margin-bottom: .5rem;
-      display: block;
-    }
-    input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 1rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      background: #1a73e8;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #1669c1;
-    }
-    .msg {
-      margin-top: 1rem;
-      text-align: center;
-      color: #333;
-      font-size: .95rem;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-top: 30px; }
+    form { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    label { display: block; margin: 8px 0 4px; }
+    input, select, button { padding: 6px; width: 100%; max-width: 300px; }
+    button { cursor: pointer; margin-top: 10px; }
+    #msg { margin-top: 15px; font-weight: bold; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Salvar número</h1>
-    <form id="form">
-      <label for="numero">Número:</label>
-      <input type="number" id="numero" name="numero" required step="any" placeholder="Ex: 42">
-      <button type="submit">Enviar</button>
-    </form>
-    <p class="msg" id="msg"></p>
-  </div>
+  <h1>Controle de Leituras</h1>
+
+  <!-- Registrar leitura -->
+  <form id="formLeitura">
+    <h2>Registrar leitura</h2>
+    <label for="loja">Loja:</label>
+    <select id="loja" required>
+      <option value="">Carregando...</option>
+    </select>
+
+    <label for="leitura">Leitura atual:</label>
+    <input type="number" id="leitura" required>
+
+    <button type="submit">Registrar</button>
+  </form>
+
+  <!-- Adicionar loja -->
+  <form id="formAdicionar">
+    <h2>Adicionar nova loja</h2>
+    <label for="novaLoja">Nome da loja:</label>
+    <input type="text" id="novaLoja" placeholder="Ex: Loja 11" required>
+
+    <label for="medidor">Número do medidor:</label>
+    <input type="text" id="medidor" required>
+
+    <button type="submit">Adicionar Loja</button>
+  </form>
+
+  <!-- Remover loja -->
+  <form id="formRemover">
+    <h2>Remover loja</h2>
+    <label for="removerLoja">Selecione a loja:</label>
+    <select id="removerLoja" required>
+      <option value="">Carregando...</option>
+    </select>
+
+    <button type="submit" style="background:#d9534f;color:white;">Remover Loja</button>
+  </form>
+
+  <div id="msg"></div>
 
   <script>
-    const form = document.getElementById("form");
+    const URL = "https://script.google.com/macros/s/AKfycbzDKvWhmf5O8GRlQ_U4WnWpLkRnqX8ahr-tBZ-C_ROypXrPiVAr29wuZg-RhZ5UCVgBYg/exec";
+
+    const selectLeitura = document.getElementById("loja");
+    const selectRemover = document.getElementById("removerLoja");
     const msg = document.getElementById("msg");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const numero = document.getElementById("numero").value.trim();
-      if (!numero) {
-        msg.textContent = "Digite um número válido!";
-        return;
-      }
+    // Carregar lista de lojas
+    async function carregarLojas() {
+      selectLeitura.innerHTML = "<option>Carregando...</option>";
+      selectRemover.innerHTML = "<option>Carregando...</option>";
 
       try {
-        const resposta = await fetch("https://script.google.com/macros/s/AKfycbzDKvWhmf5O8GRlQ_U4WnWpLkRnqX8ahr-tBZ-C_ROypXrPiVAr29wuZg-RhZ5UCVgBYg/exec", {
-          method: "POST",
-          body: new URLSearchParams({ numero })
-        });
+        const resp = await fetch(URL);
+        const lojas = await resp.json();
 
-        if (resposta.ok) {
-          msg.textContent = "Número salvo com sucesso!";
-          form.reset();
-        } else {
-          msg.textContent = "Erro ao enviar. Tente novamente.";
-        }
+        selectLeitura.innerHTML = "<option value=''>Selecione...</option>";
+        selectRemover.innerHTML = "<option value=''>Selecione...</option>";
+
+        lojas.forEach(loja => {
+          let opt1 = document.createElement("option");
+          opt1.value = loja;
+          opt1.textContent = loja;
+          selectLeitura.appendChild(opt1);
+
+          let opt2 = document.createElement("option");
+          opt2.value = loja;
+          opt2.textContent = loja;
+          selectRemover.appendChild(opt2);
+        });
       } catch (err) {
-        msg.textContent = "Erro de conexão: " + err.message;
+        selectLeitura.innerHTML = "<option>Erro ao carregar</option>";
+        selectRemover.innerHTML = "<option>Erro ao carregar</option>";
+      }
+    }
+
+    // Registrar leitura
+    document.getElementById("formLeitura").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const loja = selectLeitura.value;
+      const leitura = document.getElementById("leitura").value;
+
+      const params = new URLSearchParams();
+      params.append("loja", loja);
+      params.append("leitura", leitura);
+
+      const resp = await fetch(URL, { method: "POST", body: params });
+      const data = await resp.json();
+      msg.textContent = data.msg;
+      msg.style.color = data.ok ? "green" : "red";
+
+      if (data.ok) document.getElementById("formLeitura").reset();
+    });
+
+    // Adicionar loja
+    document.getElementById("formAdicionar").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const loja = document.getElementById("novaLoja").value;
+      const medidor = document.getElementById("medidor").value;
+
+      const params = new URLSearchParams();
+      params.append("acao", "adicionarLoja");
+      params.append("loja", loja);
+      params.append("medidor", medidor);
+
+      const resp = await fetch(URL, { method: "POST", body: params });
+      const data = await resp.json();
+      msg.textContent = data.msg;
+      msg.style.color = data.ok ? "green" : "red";
+
+      if (data.ok) {
+        document.getElementById("formAdicionar").reset();
+        carregarLojas(); // atualiza lista
       }
     });
+
+    // Remover loja
+    document.getElementById("formRemover").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const loja = selectRemover.value;
+
+      const params = new URLSearchParams();
+      params.append("acao", "removerLoja");
+      params.append("loja", loja);
+
+      const resp = await fetch(URL, { method: "POST", body: params });
+      const data = await resp.json();
+      msg.textContent = data.msg;
+      msg.style.color = data.ok ? "green" : "red";
+
+      if (data.ok) {
+        document.getElementById("formRemover").reset();
+        carregarLojas(); // atualiza lista
+      }
+    });
+
+    // Carregar lista ao abrir
+    carregarLojas();
   </script>
 </body>
 </html>
