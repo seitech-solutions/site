@@ -1,30 +1,41 @@
-<div id="reader" style="width:300px;"></div>
-<select id="loja"></select>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste QR Code</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+    #reader { width: 300px; margin: auto; }
+    #resultado { margin-top: 20px; font-size: 1.2rem; font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+  <h1>Teste Leitura QR Code</h1>
+  <div id="reader"></div>
+  <div id="resultado">Aguardando QR Code...</div>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script>
-const selectLoja = document.getElementById("loja");
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script>
+    const resultado = document.getElementById("resultado");
 
-// Inicializa o scanner
-function iniciarScanner() {
-  const html5QrcodeScanner = new Html5Qrcode("reader");
-  html5QrcodeScanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    qrCodeMessage => {
-      // Quando lê o QR, preenche o select
-      for(let i=0; i<selectLoja.options.length; i++){
-        if(selectLoja.options[i].value === qrCodeMessage){
-          selectLoja.selectedIndex = i;
-          break;
+    function iniciarScanner() {
+      const html5QrcodeScanner = new Html5Qrcode("reader");
+
+      html5QrcodeScanner.start(
+        { facingMode: "environment" }, // usa câmera traseira
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          resultado.textContent = "QR Code lido: " + qrCodeMessage;
+        },
+        errorMessage => {
+          // não mostra erro para cada frame sem QR Code
         }
-      }
-    },
-    errorMessage => {
-      // console.log('Sem QR Code', errorMessage);
+      ).catch(err => {
+        resultado.textContent = "Erro ao iniciar câmera: " + err;
+      });
     }
-  );
-}
 
-iniciarScanner();
-</script>
+    iniciarScanner();
+  </script>
+</body>
+</html>
