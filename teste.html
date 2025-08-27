@@ -1,13 +1,30 @@
-<input type="file" id="foto" accept="image/*" capture="environment">
-<input type="text" id="leitura" placeholder="Leitura capturada">
+<div id="reader" style="width:300px;"></div>
+<select id="loja"></select>
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-document.getElementById("foto").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+const selectLoja = document.getElementById("loja");
 
-  const { data: { text } } = await Tesseract.recognize(file, 'por', { logger: m => console.log(m) });
-  document.getElementById("leitura").value = text.replace(/\D/g,''); // só números
-});
+// Inicializa o scanner
+function iniciarScanner() {
+  const html5QrcodeScanner = new Html5Qrcode("reader");
+  html5QrcodeScanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    qrCodeMessage => {
+      // Quando lê o QR, preenche o select
+      for(let i=0; i<selectLoja.options.length; i++){
+        if(selectLoja.options[i].value === qrCodeMessage){
+          selectLoja.selectedIndex = i;
+          break;
+        }
+      }
+    },
+    errorMessage => {
+      // console.log('Sem QR Code', errorMessage);
+    }
+  );
+}
+
+iniciarScanner();
 </script>
